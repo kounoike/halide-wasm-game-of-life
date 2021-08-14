@@ -12,8 +12,8 @@ export interface Wasm extends EmscriptenModule {
 
 declare function createWasmModule(): Promise<Wasm>
 
-const width = 800
-const height = 800
+const width = 1024
+const height = 1024
 const size = 1
 
 function App() {

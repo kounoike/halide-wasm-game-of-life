@@ -9,7 +9,7 @@ class GameOfLifeTask : public Halide::Generator<GameOfLifeTask> {
   Halide::Func sum{"sum"};
 
   void generate() {
-    auto input_bordered = Halide::BoundaryConditions::constant_exterior(input, 0);
+    auto input_bordered = Halide::BoundaryConditions::repeat_image(input);
     auto r = Halide::RDom(-1, 3, -1, 3);
 
     sum(x, y) = Halide::sum(Halide::select(

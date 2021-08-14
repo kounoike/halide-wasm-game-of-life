@@ -12,13 +12,6 @@ class GameOfLifeTask : public Halide::Generator<GameOfLifeTask> {
     auto input_bordered = Halide::BoundaryConditions::constant_exterior(input, 0);
     auto r = Halide::RDom(-1, 3, -1, 3);
 
-    // sum(x, y) = Halide::sum(input_bordered(x + r.x, y + r.y));
-    // output(x, y) = Halide::select(
-    //   sum(x, y) == 3, static_cast<std::uint8_t>(1),
-    //   sum(x, y) == 4, input_bordered(x, y),
-    //   static_cast<std::uint8_t>(0)
-    // );
-
     sum(x, y) = Halide::sum(Halide::select(
       r.x == 0 && r.y == 0, Halide::ConciseCasts::u8(0),
       input_bordered(x + r.x, y + r.y)

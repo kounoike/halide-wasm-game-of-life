@@ -31,6 +31,7 @@ if(CMAKE_CROSSCOMPILING)
 
     find_package(HalideHelpers REQUIRED)
     add_halide_library(visualize FROM hostvisualize_gen GENERATOR visualize_task TARGETS wasm-32-wasmrt-wasm_bulk_memory-wasm_simd128-wasm_sat_float_to_int-wasm_signext)
+    add_halide_library(visualize1 FROM hostvisualize_gen GENERATOR visualize1_task TARGETS wasm-32-wasmrt-wasm_bulk_memory-wasm_simd128-wasm_sat_float_to_int-wasm_signext)
     add_halide_library(gameoflife FROM hostgameoflife_gen GENERATOR gameoflife_task TARGETS wasm-32-wasmrt-wasm_bulk_memory-wasm_simd128-wasm_sat_float_to_int-wasm_signext)
 
     add_executable(gol wasm.cc)
@@ -45,10 +46,7 @@ if(CMAKE_CROSSCOMPILING)
     )
 
     add_executable(gol_sdl wasm_sdl.cc)
-    include_directories(/build_wasm_simd/include/opencv4)
-    file(GLOB opencv_core "/build_wasm_simd/lib/libopencv*.a")
-    file(GLOB opencv_3rdparty "/build_wasm_simd/lib/opencv4/3rdparty/*.a")
-    target_link_libraries(gol_sdl PRIVATE visualize gameoflife ${opencv_core} ${opencv_3rdparty})
+    target_link_libraries(gol_sdl PRIVATE visualize1 gameoflife)
     target_link_options(gol_sdl PRIVATE 
         "SHELL:-s INITIAL_MEMORY=1310720000"
         "SHELL:-s ALLOW_MEMORY_GROWTH=1"

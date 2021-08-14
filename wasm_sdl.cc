@@ -1,13 +1,12 @@
 #include <SDL/SDL.h>
 #include <emscripten.h>
 #include <emscripten/html5.h>
-#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <random>
 #include <chrono>
 #include <HalideBuffer.h>
 #include "gameoflife.h"
-#include "visualize.h"
+#include "visualize1.h"
 
 const int WIDTH = 1024;
 const int HEIGHT = 1024;
@@ -15,7 +14,7 @@ const int SIZE = 1;
 
 std::uint8_t universeBuffer[WIDTH * HEIGHT];
 std::uint8_t tmpBuffer[WIDTH * HEIGHT];
-std::uint8_t visualizeBuffer[WIDTH * SIZE * HEIGHT * SIZE * 4];
+std::uint8_t visualizeBuffer[WIDTH * SIZE * HEIGHT * SIZE * 3 / 2];
 
 struct context
 {
@@ -37,14 +36,11 @@ void mainloop(void *arg)
     gameoflife(input, output);
     input.copy_from(output);
 
-    auto visualizeOutput = Halide::Runtime::Buffer<uint8_t>::make_interleaved(visualizeBuffer, WIDTH * SIZE, HEIGHT * SIZE, 4);
-    visualize(input, SIZE, visualizeOutput);
+    Halide::Runtime::Buffer<uint8_t> visualizeOutput(visualizeBuffer, WIDTH * SIZE, HEIGHT * SIZE);
+    visualize1(input, SIZE, visualizeOutput);
 
-    cv::Mat rgbaMat(HEIGHT * SIZE, WIDTH * SIZE, CV_8UC4, visualizeBuffer);
-    cv::Mat yuvMat;
-    cv::cvtColor(rgbaMat, yuvMat, cv::COLOR_RGBA2YUV_YV12);
     int ret;
-    ret = SDL_UpdateTexture(ctx->texture, NULL, yuvMat.data, WIDTH * SIZE);
+    ret = SDL_UpdateTexture(ctx->texture, NULL, visualizeBuffer, WIDTH * SIZE);
     SDL_SetRenderDrawColor(ctx->renderer, 255, 0, 0, 255);
     SDL_RenderClear(ctx->renderer);
     ret = SDL_RenderCopy(ctx->renderer, ctx->texture, NULL, NULL);
@@ -71,15 +67,9 @@ int main()
     {
         universeBuffer[i] = mt() & 0x80000000 ? 0 : 1;
     }
-
-    Halide::Runtime::Buffer<uint8_t> input{universeBuffer, WIDTH, HEIGHT};
-    auto visualizeOutput = Halide::Runtime::Buffer<uint8_t>::make_interleaved(visualizeBuffer, WIDTH * SIZE, HEIGHT * SIZE, 4);
-    visualize(input, SIZE, visualizeOutput);
-    SDL_UpdateTexture(ctx.texture, NULL, visualizeBuffer, WIDTH * SIZE * sizeof(Uint32));
-    SDL_RenderClear(ctx.renderer);
-    SDL_RenderCopy(ctx.renderer, ctx.texture, NULL, NULL);
-    SDL_RenderPresent(ctx.renderer);
-
+    for (int i = 0; i < WIDTH * SIZE * HEIGHT * SIZE * 3 / 2; ++i) {
+        visualizeBuffer[i] = 128;
+    }
 
     const int simulate_infinite_loop = 1;
     const int fps = -1;

@@ -28,3 +28,26 @@ class VisualizeTask : public Halide::Generator<VisualizeTask> {
 
 HALIDE_REGISTER_GENERATOR(VisualizeTask, visualize_task);
 
+class Visualize1Task : public Halide::Generator<Visualize1Task> {
+  public:
+  Halide::GeneratorInput<Halide::Buffer<std::uint8_t>> input{"input", 2};
+  Halide::GeneratorOutput<Halide::Buffer<std::uint8_t>> output{"output", 2};
+  Halide::GeneratorInput<int> size{"size"};
+
+  Halide::Var x{"x"}, y{"y"};
+
+  void generate() {
+    output(x, y) = Halide::select(
+      // (x % size == 0) || (x % size == size - 1) || (y % size == 0) || (y % size == size - 1), (uint8_t) 128,
+      (size >= 3) && ((x % size == 0) || (y % size == 0)), (uint8_t) 128,
+      (1 - input(x / size, y / size)) * (uint8_t) 255
+    );
+  }
+
+  void schedule() {
+    output.reorder(x, y);
+  }
+};
+
+HALIDE_REGISTER_GENERATOR(Visualize1Task, visualize1_task);
+

@@ -45,7 +45,10 @@ if(CMAKE_CROSSCOMPILING)
     )
 
     add_executable(gol_sdl wasm_sdl.cc)
-    target_link_libraries(gol_sdl gameoflife)
+    include_directories(/build_wasm_simd/include/opencv4)
+    file(GLOB opencv_core "/build_wasm_simd/lib/libopencv*.a")
+    file(GLOB opencv_3rdparty "/build_wasm_simd/lib/opencv4/3rdparty/*.a")
+    target_link_libraries(gol_sdl PRIVATE visualize gameoflife ${opencv_core} ${opencv_3rdparty})
     target_link_options(gol_sdl PRIVATE 
         "SHELL:-s INITIAL_MEMORY=1310720000"
         "SHELL:-s ALLOW_MEMORY_GROWTH=1"

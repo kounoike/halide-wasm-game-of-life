@@ -1,10 +1,13 @@
 #include <SDL/SDL.h>
 #include <emscripten.h>
+#include <emscripten/html5.h>
+#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <random>
 #include <chrono>
 #include <HalideBuffer.h>
 #include "gameoflife.h"
+#include "visualize.h"
 
 const int WIDTH = 1024;
 const int HEIGHT = 1024;
@@ -12,15 +15,21 @@ const int SIZE = 1;
 
 std::uint8_t universeBuffer[WIDTH * HEIGHT];
 std::uint8_t tmpBuffer[WIDTH * HEIGHT];
+std::uint8_t visualizeBuffer[WIDTH * SIZE * HEIGHT * SIZE * 4];
 
-struct context {
+struct context
+{
+    SDL_Window *window;
     SDL_Renderer *renderer;
+    SDL_Texture *texture;
     int iteration;
 };
 
-void mainloop(void *arg) {
-    context *ctx = static_cast<context*>(arg);
-    SDL_Renderer* renderer = ctx->renderer;
+extern "C" {
+
+void mainloop(void *arg)
+{
+    context *ctx = static_cast<context *>(arg);
 
     Halide::Runtime::Buffer<uint8_t> input{universeBuffer, WIDTH, HEIGHT};
     Halide::Runtime::Buffer<uint8_t> output{tmpBuffer, WIDTH, HEIGHT};
@@ -28,51 +37,60 @@ void mainloop(void *arg) {
     gameoflife(input, output);
     input.copy_from(output);
 
-    SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
-    SDL_RenderClear(renderer);
+    auto visualizeOutput = Halide::Runtime::Buffer<uint8_t>::make_interleaved(visualizeBuffer, WIDTH * SIZE, HEIGHT * SIZE, 4);
+    visualize(input, SIZE, visualizeOutput);
 
-    SDL_Rect r;
-    r.w = (SIZE > 2) ? SIZE - 1 : SIZE;
-    r.h = (SIZE > 2) ? SIZE - 1 : SIZE;
-    for(int i = 0; i < HEIGHT; ++i) {
-        for(int j = 0; j < WIDTH; ++j) {
-            r.x = j * SIZE;
-            r.y = i * SIZE;
-            int color = (tmpBuffer[i * WIDTH + j] == 1) ? 5 : 250;
-            SDL_SetRenderDrawColor(renderer, color, color, color, 255);
-            SDL_RenderFillRect(renderer, &r);
-        }
-    }
-    SDL_RenderPresent(renderer);
+    cv::Mat rgbaMat(HEIGHT * SIZE, WIDTH * SIZE, CV_8UC4, visualizeBuffer);
+    cv::Mat yuvMat;
+    cv::cvtColor(rgbaMat, yuvMat, cv::COLOR_RGBA2YUV_YV12);
+    int ret;
+    ret = SDL_UpdateTexture(ctx->texture, NULL, yuvMat.data, WIDTH * SIZE);
+    SDL_SetRenderDrawColor(ctx->renderer, 255, 0, 0, 255);
+    SDL_RenderClear(ctx->renderer);
+    ret = SDL_RenderCopy(ctx->renderer, ctx->texture, NULL, NULL);
+    SDL_RenderPresent(ctx->renderer);
 
     ctx->iteration++;
 }
 
-int main() {
+int main()
+{
+    std::cout << "Init" << std::endl;
+    SDL_Init(SDL_INIT_VIDEO);
+    context ctx;
+    ctx.window = SDL_CreateWindow("universe", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH * SIZE, HEIGHT * SIZE, SDL_WINDOW_SHOWN);
+    ctx.renderer = SDL_CreateRenderer(ctx.window, -1, 0);
+    ctx.texture = SDL_CreateTexture(ctx.renderer, SDL_PIXELFORMAT_YV12, SDL_TextureAccess::SDL_TEXTUREACCESS_STREAMING, WIDTH * SIZE, HEIGHT * SIZE);
+    std::cout << SDL_GetError() << std::endl;
+    std::cout << "window: " << ctx.window << " renderer: " << ctx.renderer << " texture: " << ctx.texture << std::endl;
+    ctx.iteration = 0;
+
     auto now = std::chrono::system_clock::now();
     std::mt19937 mt(now.time_since_epoch().count());
-    for(int i = 0; i < WIDTH * HEIGHT; ++i) {
+    for (int i = 0; i < WIDTH * HEIGHT; ++i)
+    {
         universeBuffer[i] = mt() & 0x80000000 ? 0 : 1;
     }
 
+    Halide::Runtime::Buffer<uint8_t> input{universeBuffer, WIDTH, HEIGHT};
+    auto visualizeOutput = Halide::Runtime::Buffer<uint8_t>::make_interleaved(visualizeBuffer, WIDTH * SIZE, HEIGHT * SIZE, 4);
+    visualize(input, SIZE, visualizeOutput);
+    SDL_UpdateTexture(ctx.texture, NULL, visualizeBuffer, WIDTH * SIZE * sizeof(Uint32));
+    SDL_RenderClear(ctx.renderer);
+    SDL_RenderCopy(ctx.renderer, ctx.texture, NULL, NULL);
+    SDL_RenderPresent(ctx.renderer);
 
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    window = SDL_CreateWindow("universe", 0, 0, WIDTH * SIZE, HEIGHT * SIZE, 0);
-    renderer = SDL_CreateRenderer(window, 0, 0);
-
-    context ctx;
-    ctx.renderer = renderer;
-    ctx.iteration = 0;
 
     const int simulate_infinite_loop = 1;
     const int fps = -1;
+    std::cout << "before set_main_loop" << std::endl;
     emscripten_set_main_loop_arg(mainloop, &ctx, fps, simulate_infinite_loop);
+    std::cout << "after set_main_loop" << std::endl;
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    // SDL_DestroyRenderer(ctx.renderer);
+    // SDL_DestroyWindow(ctx.window);
+    // SDL_Quit();
 
     return EXIT_SUCCESS;
+}
 }

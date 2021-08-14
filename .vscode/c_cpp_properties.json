@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/emsdk/upstream/emscripten/system/include",
-                "/Halide/include"
+                "/Halide/include",
+                "/usr/local/include/opencv4"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

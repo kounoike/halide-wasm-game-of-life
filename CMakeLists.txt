@@ -48,10 +48,12 @@ if(CMAKE_CROSSCOMPILING)
     add_executable(gol_sdl wasm_sdl.cc)
     target_link_libraries(gol_sdl PRIVATE visualize1 gameoflife)
     target_link_options(gol_sdl PRIVATE 
-        "SHELL:-s INITIAL_MEMORY=1310720000"
+        "SHELL:-s INITIAL_MEMORY=9043968"
         "SHELL:-s ALLOW_MEMORY_GROWTH=1"
         "SHELL:-s USE_PTHREADS=0"
         "SHELL:-s USE_SDL=2"
+        "SHELL:-s EXPORTED_FUNCTIONS='[\"_getCurrentFps\", \"_main\"]'"
+        "SHELL:-s EXPORTED_RUNTIME_METHODS='[\"ccall\"]'"
     )
 
 

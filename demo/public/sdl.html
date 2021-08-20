@@ -8,12 +8,18 @@
 
 <body>
 
+    <p><span>FPS:</span><span id="fps"></span></p>
     <canvas id="canvas" oncontextmenu="event.preventDefault()" style="border: 1px solid blue;"></canvas>
-
+    
     <script type='text/javascript'>
         var Module = {
-            canvas: (function() { return document.getElementById('canvas'); })()
+            canvas: (function() { return document.getElementById('canvas'); })(),
+            onRuntimeInitialized: () =>         setInterval(() => {
+                const fps = Module.ccall('getCurrentFps', 'number', [], []);
+                document.getElementById('fps').innerText = `${fps}`
+            }, 100),
         };
+        console.log(Module)
     </script>
     
     <script src="gol_sdl.js"></script>

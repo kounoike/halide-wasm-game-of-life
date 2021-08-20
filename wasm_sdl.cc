@@ -16,15 +16,22 @@ std::uint8_t universeBuffer[WIDTH * HEIGHT];
 std::uint8_t tmpBuffer[WIDTH * HEIGHT];
 std::uint8_t visualizeBuffer[WIDTH * SIZE * HEIGHT * SIZE * 3 / 2];
 
+const int FPS_COUNT = 100;
+
 struct context
 {
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Texture *texture;
     int iteration;
+    std::chrono::system_clock::time_point fpsCounts[FPS_COUNT];
 };
+double currentFps = 0.0;
 
 extern "C" {
+
+EMSCRIPTEN_KEEPALIVE
+double getCurrentFps() { return currentFps; }
 
 void mainloop(void *arg)
 {
@@ -46,6 +53,13 @@ void mainloop(void *arg)
     ret = SDL_RenderCopy(ctx->renderer, ctx->texture, NULL, NULL);
     SDL_RenderPresent(ctx->renderer);
 
+    auto now = std::chrono::system_clock::now();
+    auto duration = now - ctx->fpsCounts[ctx->iteration % FPS_COUNT];
+    if (ctx->iteration >= 100) {
+        currentFps = 100.0 / (std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 1000.0);
+    }
+    
+    ctx->fpsCounts[ctx->iteration % FPS_COUNT] = now;
     ctx->iteration++;
 }
 

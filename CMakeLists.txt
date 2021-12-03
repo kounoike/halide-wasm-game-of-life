@@ -48,15 +48,18 @@ if(CMAKE_CROSSCOMPILING)
     add_executable(gol_sdl wasm_sdl.cc)
     target_link_libraries(gol_sdl PRIVATE visualize1 gameoflife)
     target_link_options(gol_sdl PRIVATE 
-        "SHELL:-s INITIAL_MEMORY=9043968"
+        "SHELL:-s INITIAL_MEMORY=36175872"
         "SHELL:-s ALLOW_MEMORY_GROWTH=1"
         "SHELL:-s USE_PTHREADS=0"
         "SHELL:-s USE_SDL=2"
-        "SHELL:-s EXPORTED_FUNCTIONS='[\"_getCurrentFps\", \"_main\"]'"
+        "SHELL:-s EXPORTED_FUNCTIONS='[\"_getCurrentFps\", \"_getLastDuration\", \"_main\"]'"
         "SHELL:-s EXPORTED_RUNTIME_METHODS='[\"ccall\"]'"
     )
-
-
+    file(GENERATE OUTPUT hogehoge.txt CONTENT "$<CONFIG> $<$<CONFIG:Debug>:-O0;-g>")
+    target_compile_options(gol_sdl PRIVATE
+        "$<$<CONFIG:DEBUG>:-O0;-g>"
+        "$<$<CONFIG:Release>:-O3>"
+    )
 
 else()
     message("*******************************Host Build CMake****************************************")
@@ -69,14 +72,17 @@ else()
     add_executable(gameoflife_gen halide_gen/gameoflife_gen.cc)
     target_link_libraries(gameoflife_gen PRIVATE Halide::Generator)
 
-    # enable_testing()
-    # find_package(GTest)
-    # add_executable(test_hello test/hello_test.cc)
-    # target_link_libraries(test_hello GTest::GTest GTest::Main visualize)
+    find_package(HalideHelpers REQUIRED)
+    add_halide_library(visualize FROM hostvisualize_gen GENERATOR visualize_task)
+    add_halide_library(visualize1 FROM hostvisualize_gen GENERATOR visualize1_task)
+    add_halide_library(gameoflife FROM hostgameoflife_gen GENERATOR gameoflife_task)
 
-    # add_executable(halide_test halide_gen/halide_test.cc)
-    # target_link_libraries(halide_test GTest::GTest GTest::Main visualize gameoflife)
-    # gtest_discover_tests(test_hello halide_test)
+    enable_testing()
+    find_package(GTest)
+
+    add_executable(halide_test halide_gen/halide_test.cc)
+    target_link_libraries(halide_test GTest::GTest GTest::Main visualize gameoflife)
+    gtest_discover_tests(halide_test)
 
     foreach(tgt IN ITEMS ${host_tools_list})
         add_executable(host${tgt} ALIAS ${tgt})

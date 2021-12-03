@@ -14,27 +14,33 @@ std::uint8_t inputBuffer[MAX_WIDTH * MAX_HEIGHT];
 std::uint8_t outputBuffer[MAX_WIDTH * MAX_HEIGHT];
 std::uint8_t visualizeBuffer[MAX_WIDTH * MAX_SIZE * MAX_HEIGHT * MAX_SIZE * 4];
 
-extern "C" {
+extern "C"
+{
     EMSCRIPTEN_KEEPALIVE
-    std::uint8_t* getInputBufferOffset() {
+    std::uint8_t *getInputBufferOffset()
+    {
         return inputBuffer;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    std::uint8_t* getOutputBufferOffset() {
+    std::uint8_t *getOutputBufferOffset()
+    {
         return outputBuffer;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    std::uint8_t* getVisualizeBufferOffset() {
+    std::uint8_t *getVisualizeBufferOffset()
+    {
         return visualizeBuffer;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    void initialize(int width, int height, int size, int seed) {
+    void initialize(int width, int height, int size, int seed)
+    {
         std::cout << "initialize " << width << "x" << height << " * " << size << " : " << seed << std::endl;
         std::mt19937 mt(seed);
-        for(int i = 0; i < width * height; ++i) {
+        for (int i = 0; i < width * height; ++i)
+        {
             inputBuffer[i] = mt() & 0x80000000 ? 0 : 1;
         }
         Halide::Runtime::Buffer<uint8_t> input{inputBuffer, width, height};
@@ -43,7 +49,8 @@ extern "C" {
     }
 
     EMSCRIPTEN_KEEPALIVE
-    int64_t exec(int width, int height, int size) {
+    int64_t exec(int width, int height, int size)
+    {
         auto start = std::chrono::system_clock::now();
         Halide::Runtime::Buffer<uint8_t> input{inputBuffer, width, height};
         Halide::Runtime::Buffer<uint8_t> output{outputBuffer, width, height};

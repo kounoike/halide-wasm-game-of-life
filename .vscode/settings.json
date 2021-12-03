@@ -1,9 +1,11 @@
 {
     "files.associations": {
+        "*.h": "cpp",
         "array": "cpp",
         "bitset": "cpp",
         "string_view": "cpp",
         "initializer_list": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "chrono": "cpp"
     }
 }

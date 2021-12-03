@@ -8,22 +8,24 @@
 
 <body>
 
-    <p><span>FPS:</span><span id="fps"></span></p>
+    <p><span>FPS:</span><span id="fps"></span>&nbsp;<span>Duration[ms]:</span><span id="duration"></span></p>
     <canvas id="canvas" oncontextmenu="event.preventDefault()" style="border: 1px solid blue;"></canvas>
-    
+
     <script type='text/javascript'>
         var Module = {
-            canvas: (function() { return document.getElementById('canvas'); })(),
-            onRuntimeInitialized: () =>         setInterval(() => {
+            canvas: (function () { return document.getElementById('canvas'); })(),
+            onRuntimeInitialized: () => setInterval(() => {
                 const fps = Module.ccall('getCurrentFps', 'number', [], []);
                 document.getElementById('fps').innerText = `${fps}`
+                const duration = Module.ccall('getLastDuration', 'number', [], []);
+                document.getElementById('duration').innerText = `${duration}`
             }, 100),
         };
         console.log(Module)
     </script>
-    
+
     <script src="gol_sdl.js"></script>
-    
+
 </body>
 
 </html>

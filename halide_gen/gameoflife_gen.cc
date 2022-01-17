@@ -12,7 +12,7 @@ public:
   void generate()
   {
     auto input_bordered = Halide::BoundaryConditions::repeat_image(input);
-    auto r = Halide::RDom(-1, 3, -1, 3);
+    auto rd = Halide::RDom(-1, 3);
 
     // sum(x, y) = Halide::sum(Halide::select(
     //   r.x == 0 && r.y == 0, Halide::ConciseCasts::u8(0),
@@ -27,17 +27,19 @@ public:
     // sum(x, y) += 2 * input_bordered(x + r.x, y + r.y);
     // sum(x, y) -= input_bordered(x, y);
     // output(x, y) = Halide::ConciseCasts::u8((sum(x, y) > 4) && (sum(x, y) < 8));
-    sumx(x, y) = input_bordered(x - 1, y) + input_bordered(x, y) + input_bordered(x + 1, y);
-    sumy(x, y) = sumx(x, y - 1) + sumx(x, y) + sumx(x, y + 1);
-    sum(x, y) = 2 * sumy(x, y) - input(x, y);
+    sumx(x, y) = Halide::sum(input_bordered(x + rd, y));
+    sumy(x, y) = Halide::sum(sumx(x, y + rd));
+    sum(x, y) = 2 * sumy(x, y) - input_bordered(x, y);
     output(x, y) = Halide::ConciseCasts::u8(sum(x, y) > 4 && sum(x, y) < 8);
   }
 
   void schedule()
   {
-    output.split(y, yo, yi, 4);
-    output.reorder(yi, x, yo);
-    output.unroll(yi);
+    output.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}});
+    input.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}});
+    // output.split(y, yo, yi, 4);
+    // output.reorder(yi, x, yo);
+    // output.unroll(yi);
     // sum.compute_at(output, y);
     // sumy.compute_at(sum, y);
     // sumx.compute_at(sumy, x).store_at(sumy, x);

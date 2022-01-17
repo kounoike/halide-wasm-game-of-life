@@ -20,11 +20,20 @@ public:
 
   void schedule()
   {
-    output.dim(0).set_stride(4);
-    output.dim(2).set_stride(1);
-    output.dim(2).set_bounds(0, 4);
+    if (auto_schedule)
+    {
+      output.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}, {0, 4}});
+      input.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}});
+      size.set_estimate(8);
+    }
+    else
+    {
+      output.dim(0).set_stride(4);
+      output.dim(2).set_stride(1);
+      output.dim(2).set_bounds(0, 4);
 
-    output.reorder(c, x, y).unroll(c);
+      output.reorder(c, x, y).unroll(c);
+    }
   }
 };
 
@@ -51,7 +60,15 @@ public:
 
   void schedule()
   {
-    output.reorder(x, y);
+    if (auto_schedule)
+    {
+      output.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}});
+      input.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}});
+    }
+    else
+    {
+      output.reorder(x, y);
+    }
   }
 };
 

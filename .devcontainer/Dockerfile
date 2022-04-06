@@ -1,6 +1,6 @@
 FROM ghcr.io/kounoike/imgproc-wasm:latest
 
-RUN apt-get update && apt-get install -y libappindicator1 fonts-liberation libnss3 libdrm2 libgbm1 xdg-utils firefox
+RUN apt-get update && apt-get install -y libappindicator1 fonts-liberation libnss3 libdrm2 libgbm1 xdg-utils firefox libasound2
 RUN curl -O https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
   dpkg -i google-chrome-stable_current_amd64.deb && \
   rm google-chrome-stable_current_amd64.deb

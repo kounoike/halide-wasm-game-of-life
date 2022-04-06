@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 import {useAsync} from 'react-use'
 
@@ -12,22 +12,28 @@ export interface Wasm extends EmscriptenModule {
 
 declare function createWasmModule(): Promise<Wasm>
 
-const width = 1024
-const height = 1024
 const size = 1
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [width, setWidth] = useState(512)
+  const [height, setHeight] = useState(512)
+  const [rafId, setRafId] = useState<number | null>(null)
   const [duration, setDuration] = useState(0)
+
   const wasmState = useAsync(async () => {
     const wasm = createWasmModule()
     return wasm
   })
 
   useEffect(() => {
-    if (!wasmState.loading && canvasRef.current) {
-      const wasm = wasmState.value!
-      wasm._initialize(width, height, size, Date.now())
+    if (wasmState.value && canvasRef && canvasRef.current) {
+      if (rafId) {
+        cancelAnimationFrame(rafId)
+      }
+
+      const wasm = wasmState.value
+      wasm._initialize(width, height, size, Date.now() % 10000)
       console.log("Initialize done")
 
       const outputImageBufferOffset = wasm._getVisualizeBufferOffset() 
@@ -40,26 +46,42 @@ function App() {
       console.log(new Uint8ClampedArray(wasm.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + width * height * 4)))
 
       const render = () => {
+        if (!wasmState.value) return
+        const wasm = wasmState.value
         const start = performance.now()
-        const dur = wasm._exec(width, height, size)
+        const dur = wasmState.value!._exec(width, height, size)
         const outImageData = new ImageData(new Uint8ClampedArray(wasm.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + width * size * height * size * 4)), width * size, height * size)
         canvasRef.current?.getContext('2d')?.putImageData(outImageData, 0, 0)
         // console.log(dur)
         const stop = performance.now()
         const dur2 = stop - start
         setDuration(dur2)
-        requestAnimationFrame(render)
+        setRafId(requestAnimationFrame(render))
       }
-      render()
+      setRafId(requestAnimationFrame(render))
     }
-  }, [wasmState])
+  }, [width, height, wasmState, canvasRef])
 
   return (
     <div className="App">
-      <canvas ref={canvasRef} width={width * size} height={height * size}></canvas>
       <div>
-        <p>{duration} ms</p>
+        <select onChange={ev => {
+          const val = ev.target.value
+          const xPos = val.indexOf("x")
+          const w = parseInt(val.substring(0, xPos))
+          const h = parseInt(val.substring(xPos + 1))
+          console.log(w, h)
+          setWidth(w)
+          setHeight(h)
+        }}>
+          <option selected>512x512</option>
+          <option>1024x1024</option>
+          <option>2048x2048</option>
+          <option>4096x4096</option>
+        </select>
+        <span>{duration.toFixed(3)} ms</span>
       </div>
+      <canvas ref={canvasRef} width={width * size} height={height * size}></canvas>
     </div>
   );
 }

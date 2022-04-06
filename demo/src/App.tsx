@@ -41,7 +41,7 @@ function App() {
       const canvas = canvasRef.current
       canvas.getContext('2d')!.putImageData(outImageData, 0, 0)
 
-      const inputBufferOffset = wasm._getInputBufferOffset()
+      // const inputBufferOffset = wasm._getInputBufferOffset()
       // console.log(new Uint8ClampedArray(wasm.HEAPU8.slice(inputBufferOffset, inputBufferOffset + width * height)))
       // console.log(new Uint8ClampedArray(wasm.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + width * height * 4)))
 

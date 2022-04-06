@@ -28,7 +28,7 @@ function App() {
 
   useEffect(() => {
     if (wasmState.value && canvasRef && canvasRef.current) {
-      if (rafId) {
+      if (rafId !== null) {
         cancelAnimationFrame(rafId)
       }
 
@@ -42,8 +42,8 @@ function App() {
       canvas.getContext('2d')!.putImageData(outImageData, 0, 0)
 
       const inputBufferOffset = wasm._getInputBufferOffset()
-      console.log(new Uint8ClampedArray(wasm.HEAPU8.slice(inputBufferOffset, inputBufferOffset + width * height)))
-      console.log(new Uint8ClampedArray(wasm.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + width * height * 4)))
+      // console.log(new Uint8ClampedArray(wasm.HEAPU8.slice(inputBufferOffset, inputBufferOffset + width * height)))
+      // console.log(new Uint8ClampedArray(wasm.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + width * height * 4)))
 
       const render = () => {
         if (!wasmState.value) return
@@ -60,7 +60,8 @@ function App() {
       }
       setRafId(requestAnimationFrame(render))
     }
-  }, [width, height, wasmState, canvasRef, rafId])
+    // eslint-disable-next-line
+  }, [width, height, wasmState, canvasRef])
 
   return (
     <div className="App">

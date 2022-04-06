@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import {useAsync} from 'react-use'
 
@@ -49,7 +49,7 @@ function App() {
         if (!wasmState.value) return
         const wasm = wasmState.value
         const start = performance.now()
-        const dur = wasmState.value!._exec(width, height, size)
+        wasmState.value!._exec(width, height, size)
         const outImageData = new ImageData(new Uint8ClampedArray(wasm.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + width * size * height * size * 4)), width * size, height * size)
         canvasRef.current?.getContext('2d')?.putImageData(outImageData, 0, 0)
         // console.log(dur)
@@ -60,7 +60,7 @@ function App() {
       }
       setRafId(requestAnimationFrame(render))
     }
-  }, [width, height, wasmState, canvasRef])
+  }, [width, height, wasmState, canvasRef, rafId])
 
   return (
     <div className="App">

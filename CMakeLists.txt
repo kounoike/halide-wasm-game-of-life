@@ -8,7 +8,7 @@ OPTION(BUILD_TESTS "Build unit tests" ON)
 set(host_tools_list visualize_gen gameoflife_gen)
 
 if(CMAKE_CROSSCOMPILING)
-    add_compile_options("-matomics" "-mbulk-memory" "-pthreads")
+    add_compile_options("-matomics" "-mbulk-memory" "-pthread")
 
     # Pawn off the creation of the host utilities into its own dedicated space
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/host_tools)
@@ -32,11 +32,11 @@ if(CMAKE_CROSSCOMPILING)
     endforeach()
 
     find_package(HalideHelpers REQUIRED)
-    # set(HALIDE_TARGET_WASM "wasm-32-wasmrt-wasm_bulk_memory-wasm_simd128-wasm_sat_float_to_int-wasm_signext-wasm_threads")
-    set(HALIDE_TARGET_WASM "wasm-32-wasmrt-wasm_bulk_memory-wasm_simd128-wasm_sat_float_to_int-wasm_signext")
+    set(HALIDE_TARGET_WASM "wasm-32-wasmrt-wasm_bulk_memory-wasm_simd128-wasm_sat_float_to_int-wasm_signext-wasm_threads")
+    # set(HALIDE_TARGET_WASM "wasm-32-wasmrt-wasm_bulk_memory-wasm_simd128-wasm_sat_float_to_int-wasm_signext")
     add_halide_library(gameoflife FROM hostgameoflife_gen GENERATOR gameoflife_task TARGETS ${HALIDE_TARGET_WASM} PARAMS -p /Halide/lib/libautoschedule_adams2019.so -s Adams2019 auto_schedule=true)
-    add_halide_library(visualize FROM hostvisualize_gen GENERATOR visualize_task USE_RUNTIME gameoflife.runtime TARGETS ${HALIDE_TARGET_WASM} PARAMS auto_schedule=false)
-    add_halide_library(visualize1 FROM hostvisualize_gen GENERATOR visualize1_task USE_RUNTIME gameoflife.runtime TARGETS ${HALIDE_TARGET_WASM} PARAMS auto_schedule=false)
+    add_halide_library(visualize FROM hostvisualize_gen GENERATOR visualize_task  TARGETS ${HALIDE_TARGET_WASM} PARAMS -p /Halide/lib/libautoschedule_adams2019.so -s Adams2019 auto_schedule=true)
+    add_halide_library(visualize1 FROM hostvisualize_gen GENERATOR visualize1_task  TARGETS ${HALIDE_TARGET_WASM} PARAMS -p /Halide/lib/libautoschedule_adams2019.so -s Adams2019 auto_schedule=true)
 
     add_executable(gol wasm.cc)
     target_link_libraries(gol visualize gameoflife)
@@ -44,7 +44,8 @@ if(CMAKE_CROSSCOMPILING)
     target_link_options(gol PRIVATE 
         "SHELL:-s INITIAL_MEMORY=1310720000"
         "SHELL:-s ALLOW_MEMORY_GROWTH=1"
-        "SHELL:-s USE_PTHREADS=0"
+        "SHELL:-s USE_PTHREADS=1"
+        "SHELL:-s PTHREAD_POOL_SIZE=8"
         "SHELL:-s MODULARIZE=1"
         "SHELL:-s ASSERTIONS=2"
         "SHELL:-s EXPORT_NAME=createWasmModule"

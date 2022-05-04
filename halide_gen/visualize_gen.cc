@@ -22,8 +22,11 @@ public:
   {
     if (auto_schedule)
     {
-      output.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}, {0, 4}});
-      input.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}});
+      output.dim(0).set_stride(4);
+      output.dim(2).set_stride(1);
+      output.dim(2).set_bounds(0, 4);
+      output.set_estimates({{0, 4 * 1024}, {0, 4 * 1024}, {0, 4}});
+      input.set_estimates({{0, 4 * 1024}, {0, 4 * 1024}});
       size.set_estimate(8);
     }
     else
@@ -62,8 +65,8 @@ public:
   {
     if (auto_schedule)
     {
-      output.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}});
-      input.set_estimates({{0, 16 * 1024}, {0, 16 * 1024}});
+      output.set_estimates({{0, 4 * 1024}, {0, 4 * 1024}});
+      input.set_estimates({{0, 4 * 1024}, {0, 4 * 1024}});
     }
     else
     {

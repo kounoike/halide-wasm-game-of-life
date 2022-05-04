@@ -43,19 +43,14 @@ extern "C"
         {
             inputBuffer[i] = mt() & 0x80000000 ? 0 : 1;
         }
-        std::cout << "define buffer." << std::endl;
         Halide::Runtime::Buffer<uint8_t> input{inputBuffer, width, height};
-        std::cout << "define buffer done. make_interleaved" << std::endl;
         auto visualizeOutput = Halide::Runtime::Buffer<uint8_t>::make_interleaved(visualizeBuffer, width * size, height * size, 4);
-        std::cout << "make_interleaved0 done. do visualize" << std::endl;
-        // visualize(input, size, visualizeOutput);
-        std::cout << "visualize done." << std::endl;
+        visualize(input, size, visualizeOutput);
     }
 
     EMSCRIPTEN_KEEPALIVE
     int64_t exec(int width, int height, int size)
     {
-        std::cout << "exec " << width << "x" << height << " * " << size << std::endl;
         auto start = std::chrono::system_clock::now();
         Halide::Runtime::Buffer<uint8_t> input{inputBuffer, width, height};
         Halide::Runtime::Buffer<uint8_t> output{outputBuffer, width, height};

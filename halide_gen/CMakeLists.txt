@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(halide-gen)
 
-set(CMAKE_CXX_STANDARD 17)
 
+add_compile_options("-pthreads")
+
+set(CMAKE_CXX_STANDARD 17)
 # -lHalide -L ../../../../Halide-11.0.1-x86-64-linux/lib/ -std=c++17 -Wl,-rpath ../../../../Halide-11.0.1-x86-64-linux/lib
 # ./gen -g input_task target=wasm-32-wasmrt-wasm_simd128-wasm_threads-wasm_bulk_memory -o ../lib
 
@@ -19,10 +21,9 @@ add_halide_library(gameoflife FROM gameoflife_gen GENERATOR gameoflife_task TARG
 add_halide_library(visualize FROM visualize_gen GENERATOR visualize_task USE_RUNTIME gameoflife.runtime TARGETS ${HALIDE_TARGET} AUTOSCHEDULER Halide::Adams2019 PARAMS auto_schedule=true)
 add_halide_library(visualize1 FROM visualize_gen GENERATOR visualize1_task USE_RUNTIME gameoflife.runtime TARGETS ${HALIDE_TARGET} AUTOSCHEDULER Halide::Adams2019 PARAMS auto_schedule=true)
 
-set(HALIDE_TARGET_WASM "wasm-32-wasmrt-wasm_bulk_memory-wasm_simd128-wasm_sat_float_to_int-wasm_signext")
 add_halide_library(gameoflife.wasm FROM gameoflife_gen GENERATOR gameoflife_task TARGETS ${HALIDE_TARGET} AUTOSCHEDULER Halide::Adams2019 PARAMS auto_schedule=true)
-add_halide_library(visualize.wasm FROM visualize_gen GENERATOR visualize_task USE_RUNTIME gameoflife.runtime TARGETS ${HALIDE_TARGET} AUTOSCHEDULER Halide::Adams2019 PARAMS auto_schedule=true)
-add_halide_library(visualize1.wasm FROM visualize_gen GENERATOR visualize1_task USE_RUNTIME gameoflife.runtime TARGETS ${HALIDE_TARGET} AUTOSCHEDULER Halide::Adams2019 PARAMS auto_schedule=true)
+add_halide_library(visualize.wasm FROM visualize_gen GENERATOR visualize_task TARGETS ${HALIDE_TARGET} AUTOSCHEDULER Halide::Adams2019 PARAMS auto_schedule=true)
+add_halide_library(visualize1.wasm FROM visualize_gen GENERATOR visualize1_task TARGETS ${HALIDE_TARGET} AUTOSCHEDULER Halide::Adams2019 PARAMS auto_schedule=true)
 
 
 export(
